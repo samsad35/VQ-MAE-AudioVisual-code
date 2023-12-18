@@ -1,0 +1,9 @@
+# @package _group_
+num_hiddens: 128
+num_residual_layers: 2
+num_residual_hiddens: 64
+num_embeddings: 512
+embedding_dim: 4
+commitment_cost: 0.25
+decay: 0.99
+input_channel: 3

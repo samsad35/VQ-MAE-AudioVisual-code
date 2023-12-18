@@ -1,0 +1,14 @@
+defaults:
+  - dataset: default
+  - model: default
+  - vqvae_1: default
+  - vqvae_2: default
+
+train:
+  batch_size: 16
+  lr: 1e-3
+  device: 'cuda'
+  weight_decay: 0.05
+  warmup_epoch: 40
+  total_epoch: 800
+  num_workers: 4

@@ -1,0 +1,207 @@
+import torch
+import timm
+import numpy as np
+from einops import repeat, rearrange
+from einops.layers.torch import Rearrange
+from timm.models.layers import trunc_normal_
+from timm.models.vision_transformer import Block
+
+"""
+        Functions
+
+"""
+
+
+def random_indexes(size: int):
+    forward_indexes = np.arange(size)
+    np.random.shuffle(forward_indexes)
+    backward_indexes = np.argsort(forward_indexes)
+    return forward_indexes, backward_indexes
+
+
+def take_indexes(sequences, indexes):
+    return torch.gather(sequences, 0, repeat(indexes, 't b -> t b c', c=sequences.shape[-1]))
+
+
+class PatchShuffle(torch.nn.Module):
+    def __init__(self, ratio) -> None:
+        super().__init__()
+        self.ratio = ratio
+
+    def forward(self, patches: torch.Tensor):
+        T, B, C = patches.shape
+        remain_T = int(T * (1 - self.ratio))
+
+        indexes = [random_indexes(T) for _ in range(B)]
+        forward_indexes = torch.as_tensor(np.stack([i[0] for i in indexes], axis=-1), dtype=torch.long).to(
+            patches.device)
+        backward_indexes = torch.as_tensor(np.stack([i[1] for i in indexes], axis=-1), dtype=torch.long).to(
+            patches.device)
+
+        patches = take_indexes(patches, forward_indexes)
+        patches = patches[:remain_T]
+
+        return patches, forward_indexes, backward_indexes
+
+
+def size_model(model: torch.nn.Module):
+    size_model = 0
+    for param in model.parameters():
+        if param.data.is_floating_point():
+            size_model += param.numel() * torch.finfo(param.data.dtype).bits
+        else:
+            size_model += param.numel() * torch.iinfo(param.data.dtype).bits
+    print(f"model size: {size_model} / bit | {size_model / 8e6:.2f} / MB")
+
+
+"""
+        MASKED Encoder
+
+"""
+
+
+class MAE_Encoder(torch.nn.Module):
+    def __init__(self,
+                 seq_length=None,
+                 dim_indices=None,
+                 emb_dim=None,
+                 num_layer=12,
+                 num_head=2,
+                 mask_ratio=0.25,
+                 num_embeddings=512
+                 ) -> None:
+        super().__init__()
+        self.cls_token = torch.nn.Parameter(torch.zeros(1, 1, emb_dim))
+        self.pos_embedding = torch.nn.Parameter(torch.zeros(seq_length, 1, emb_dim))
+        self.shuffle = PatchShuffle(mask_ratio)
+        self.proj = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=emb_dim)
+        # self.proj = torch.nn.Identity()
+        self.transformer = torch.nn.Sequential(*[Block(emb_dim, num_head) for _ in range(num_layer)])
+        self.layer_norm = torch.nn.LayerNorm(emb_dim)
+        self.emb_dim = emb_dim
+        self.dim_indices = dim_indices
+        self.seq_length = seq_length
+        self.mask_ratio = mask_ratio
+        self.init_weight()
+
+    def init_weight(self):
+        trunc_normal_(self.cls_token, std=.02)
+        trunc_normal_(self.pos_embedding, std=.02)
+
+    def forward(self, patches):
+        patches = self.proj(patches)
+        patches = rearrange(patches, 'b t c-> t b c', c=self.emb_dim)
+        patches = patches + self.pos_embedding
+        patches, forward_indexes, backward_indexes = self.shuffle(patches)
+        patches = torch.cat([self.cls_token.expand(-1, patches.shape[1], -1), patches], dim=0)
+        patches = rearrange(patches, 't b c -> b t c')
+        features = self.layer_norm(self.transformer(patches))
+        features = rearrange(features, 'b t c -> t b c')
+        return features, backward_indexes
+
+
+"""
+        MASKED Decoder
+
+"""
+
+
+class MAE_Decoder(torch.nn.Module):
+    def __init__(self,
+                 seq_length=None,
+                 dim_indices=None,
+                 emb_dim=None,
+                 num_layer=4,
+                 num_head=2,
+                 dim_tokens=32
+                 ) -> None:
+        super().__init__()
+
+        self.mask_token = torch.nn.Parameter(torch.zeros(1, 1, emb_dim))
+        self.pos_embedding = torch.nn.Parameter(torch.zeros(seq_length + 1, 1, emb_dim))
+        self.transformer = torch.nn.Sequential(*[Block(emb_dim, num_head) for _ in range(num_layer)])
+        self.head = torch.nn.Linear(emb_dim, dim_tokens)
+        self.dim_indices = dim_indices
+        self.init_weight()
+
+    def init_weight(self):
+        trunc_normal_(self.mask_token, std=.02)
+        trunc_normal_(self.pos_embedding, std=.02)
+
+    def forward(self, features, backward_indexes):
+        T = features.shape[0]
+        backward_indexes = torch.cat(
+            [torch.zeros(1, backward_indexes.shape[1]).to(backward_indexes), backward_indexes + 1], dim=0)
+        features = torch.cat(
+            [features, self.mask_token.expand(backward_indexes.shape[0] - features.shape[0], features.shape[1], -1)],
+            dim=0)
+        features = take_indexes(features, backward_indexes)
+        features = features + self.pos_embedding
+        features = rearrange(features, 't b c -> b t c')
+        features = self.transformer(features)
+        features = rearrange(features, 'b t c -> t b c')
+        features = features[1:]  # remove global feature
+        patches = features
+        mask = torch.zeros_like(patches)
+        mask[T:] = 1
+        mask = take_indexes(mask, backward_indexes[1:] - 1)
+        mask = rearrange(mask, 't b c -> b t c')
+        patches = rearrange(patches, 't b c -> b t c')
+        patches = self.head(patches)
+        return patches, mask[:, :, 0]
+        # return patches, mask
+
+
+"""
+        MASKED AUTOENCODER
+
+"""
+
+
+class StaticMAE(torch.nn.Module):
+    def __init__(self,
+                 seq_length=16,
+                 dim_indices=4,
+                 emb_dim=64 * 2 * 2,
+                 encoder_layer=12,
+                 encoder_head=4,
+                 decoder_layer=4,
+                 decoder_head=4,
+                 mask_ratio=0.75,
+                 num_embeddings=32,
+                 dim_tokkens=32
+                 ) -> None:
+        super().__init__()
+
+        self.encoder = MAE_Encoder(seq_length=seq_length,
+                                   dim_indices=dim_indices,
+                                   emb_dim=emb_dim,
+                                   num_layer=encoder_layer,
+                                   num_head=encoder_head,
+                                   mask_ratio=mask_ratio,
+                                   num_embeddings=num_embeddings)
+
+        self.decoder = MAE_Decoder(seq_length=seq_length,
+                                   dim_indices=dim_indices,
+                                   emb_dim=emb_dim,
+                                   num_layer=decoder_layer,
+                                   num_head=decoder_head,
+                                   dim_tokens=dim_tokkens)
+
+    def forward(self, img):
+        features, backward_indexes = self.encoder(img)
+        predicted_img, mask = self.decoder(features, backward_indexes)
+        return predicted_img, mask
+
+
+if __name__ == '__main__':
+    img = torch.ones(1, 60, 1024, dtype=torch.long)
+    img = img.to("cuda")
+    encoder = MAE_Encoder(seq_length=60, dim_indices=1024, emb_dim=1, num_layer=6)
+    encoder = encoder.to('cuda')
+    size_model(encoder)
+
+    decoder = MAE_Decoder(seq_length=60, dim_indices=64, emb_dim=512, dim_tokens=512)
+    decoder = decoder.to('cuda')
+    size_model(decoder)
+    features, backward_indexes = encoder(img)

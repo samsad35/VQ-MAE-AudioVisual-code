@@ -1,0 +1,1 @@
+from .vq_mae_av_gui import InterfaceVQMAE

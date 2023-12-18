@@ -1,0 +1,15 @@
+# @package _group_
+seq_length_v: 360
+seq_length_a: 160
+emb_dim_v: 4
+num_indices_v: 80
+num_embeddings_v: 512
+emb_dim_a: 16
+num_indices_a: 20
+num_embeddings_a: 128
+encoder_num_head: 4
+encoder_num_layer: 6
+decoder_num_head: 4
+decoder_num_layer: 3
+dim_tokens_v: 512
+dim_tokens_a: 128
