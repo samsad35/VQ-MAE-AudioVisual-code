@@ -9,7 +9,7 @@ from tqdm import tqdm
 from scipy.signal import savgol_filter
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from dalle_pytorch import DiscreteVAE
+# from dalle_pytorch import DiscreteVAE
 from .follow_up_vqvae import Follow
 
 

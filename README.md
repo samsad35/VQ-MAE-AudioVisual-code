@@ -64,6 +64,19 @@ See the code [train_vq_mae_av.py](train_vq_mae_av.py)
 - __cross-validation | Speaker independent__ Follow the file "[classification_speaker_independent.py](classification_speaker_independent.py)".
 - __80%/20% | Speaker dependent__ Follow the file "[classification_speaker_dependent.py](classification_speaker_dependent.py)".
 
+### 4) Graphical interface for VQ-MAE-AV
+![interface](images/interface.svg)
+
+> **User Interface for VQ-MAE-AV**: <br> **(1)** Click the "Config file" button to open a
+dialog box for selecting model parameters. Load the model by clicking the "VQ-MAE-AV"
+button. **(2)** Use the "Load data" button to open a dialog box for downloading a video to
+your computer. The display in **(3)** opens automatically. **(7)** Click the "Run" button, and the
+displays **(4)** (showing masked data) and **(5)** (illustrating reconstruction using our model)
+will open. **(6)** Use the slider to adjust the masking percentage. **(8)** Click the "Save" button
+to save all the data (input, masked data, and reconstruction) to your desired folder path.
+201
+
+See the code [test_interface.py](test_interface.py)
 ```
 
 ## License
