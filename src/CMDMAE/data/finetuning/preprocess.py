@@ -52,7 +52,7 @@ def preprocess_evaluation(dataset: EvaluationDataset,
     transform = transforms.Compose(
         [transforms.Normalize((0.5, 0.5, 0.5), (1.0, 1.0, 1.0)),
          transforms.CenterCrop(256),
-         transforms.Resize(128),  # 128 #224
+         transforms.Resize(128),  # 128 # 224
          transforms.CenterCrop(96)])  # 96 #192
 
     win_length = int(64e-3 * 16000)

@@ -22,14 +22,15 @@ class Classifier_Train(Train):
                  test_data: EvaluationDataset,
                  config_training: dict = None, follow: bool = True,
                  query2emo: bool = False,
-                 pooling: str = "attention"):
+                 pooling: str = "attention",
+                 num_classes: int = 6):
         super().__init__()
         self.device = torch.device(config_training['device'])
         """ Model """
         if query2emo:
-            self.model = Query2Label(cmdmae=cmdmae, num_classes=7, use_pos_encoding=False)
+            self.model = Query2Label(cmdmae=cmdmae, num_classes=num_classes, use_pos_encoding=False)
         else:
-            self.model = Classifier(cmdmae=cmdmae, num_classes=7, pooling=pooling)
+            self.model = Classifier(cmdmae=cmdmae, num_classes=num_classes, pooling=pooling)
         self.model.to(self.device)
 
         """ Dataloader """
@@ -87,7 +88,7 @@ class Classifier_Train(Train):
             self.step_count += 1
             audio, visual = audio.to(self.device), visual.to(self.device)
             label = label.to(self.device)
-            audio = self.to_tube(audio, size_patch=8, input_image=False)
+            audio = self.to_tube(audio, size_patch=4, input_image=False)
             visual = self.to_tube(visual, size_patch=4, input_image=True)
             logits = self.model(visual, audio)
             loss = self.criterion(logits, label)
@@ -122,7 +123,7 @@ class Classifier_Train(Train):
                         loss_train=avg_train_acc,
                         loss_validation=avg_test_acc,
                         parameters=self.parameters,
-                        f1_loss=f1_test)
+                        f1_loss=f1_test, save_plot=False, save_dict=False)
         return self.follow.best_loss, self.follow.best_f1
 
     def eval(self):
@@ -136,7 +137,7 @@ class Classifier_Train(Train):
                 y_true = torch.cat((y_true, label), dim=0)
                 audio, visual = audio.to(self.device), visual.to(self.device)
                 label = label.to(self.device)
-                audio = self.to_tube(audio, size_patch=8, input_image=False)
+                audio = self.to_tube(audio, size_patch=4, input_image=False)
                 visual = self.to_tube(visual, size_patch=4, input_image=True)
                 logits = self.model(visual, audio)
                 y_pred = torch.cat((y_pred, logits.argmax(dim=-1)), dim=0)

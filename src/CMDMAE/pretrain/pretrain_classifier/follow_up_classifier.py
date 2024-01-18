@@ -87,14 +87,18 @@ class Follow:
                  loss_validation: float,
                  parameters: dict,
                  f1_loss=None,
-                 figure=None):
+                 figure=None,
+                 save_plot: bool = False,
+                 save_dict: bool = False):
         self.push(epoch, loss_train, loss_validation)
         self.save_model(boolean=self.find_best_model(loss_validation, f1_loss),
                         parameters=parameters,
                         epoch=epoch,
                         every_step=1)
-        self.save_csv()
-        self.save_dict()
-        self.plot()
+        if save_dict:
+            self.save_csv()
+            self.save_dict()
+        if save_plot:
+            self.plot()
         if figure is not None:
             plt.savefig()

@@ -23,7 +23,7 @@ class Ravdess:
             for name, path in self.__generator__(id_root):
                 if name.split(".")[0].split("-")[0] != "01":  # video + audio
                     continue
-                emotion = int(name.split(".")[0].split("-")[2])-1
+                emotion = int(name.split(".")[0].split("-")[2])
                 # level = int(name.split(".")[0].split("-")[3])-1
                 yield id, name, path, emotion
 

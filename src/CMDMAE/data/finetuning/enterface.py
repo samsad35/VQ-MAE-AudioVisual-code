@@ -11,6 +11,7 @@ class Enterface:
         self.root = root
         self.length = len(glob.glob(f"{root}/**/**/**/*.{ext}"))
         self.table = None
+        self.emotion_map = dict(anger=0, disgust=1, fear=2, happiness=3, sadness=4, surprise=5)
 
     @staticmethod
     def __generator__(directory: Path):
@@ -25,12 +26,12 @@ class Enterface:
                     if sentence.split(".")[-1] == "db":
                         continue
                     if os.path.isfile(sentence_root):
-                        yield id, sentence, sentence_root, emotion
+                        yield id, sentence, sentence_root, self.emotion_map[emotion]
                         continue
                     for name, path in self.__generator__(sentence_root):
                         if name.split(".")[-1] == "db":
                             continue
-                        yield id, name, path, emotion
+                        yield id, name, path, self.emotion_map[emotion]
                 # for name, path in self.__generator__(id_root):
                     # if name.split(".")[0].split("-")[0] != "01":  # video + audio
                     #     continue
@@ -57,5 +58,5 @@ class Enterface:
 if __name__ == '__main__':
     vox = Enterface(root=Path(r"E:\Data\enterface database"))
     vox.generate_table()
-    print(vox.table["path"])
+    print(vox.table["emotion"])
 

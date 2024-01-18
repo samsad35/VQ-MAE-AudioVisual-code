@@ -57,7 +57,7 @@ class EvaluationDataset(Dataset):
             self.table = self.table.loc[~self.table['name'].isin(["1032_ITS_SAD_XX.flv",
                                                                   "1032_IEO_DIS_MD.flv",
                                                                   "1032_IEO_HAP_MD.flv"])].reset_index(drop=True)
-            self.table = self.table.loc[~self.table['emotion'].isin([-1])].reset_index(drop=True)
+            # self.table = self.table.loc[~self.table['emotion'].isin([-1])].reset_index(drop=True)
             if self.emotions_retain is not None:
                 self.table = self.table.loc[self.table['emotion'].isin(self.emotions_retain)].reset_index(drop=True)
 
@@ -122,10 +122,11 @@ class EvaluationDataset(Dataset):
         if number_frames < self.seq_length + 30:
             a = self.padding(a, seq_length=(self.seq_length + 30) * 2)
             v = self.padding(v, seq_length=self.seq_length + 30)
+        number_frames = v.shape[0]
         a = torch.from_numpy(a)
         v = torch.from_numpy(v)
-        # current_frame = np.random.randint(0, number_frames - self.seq_length)
-        current_frame = 25
+        current_frame = np.random.randint(0, number_frames - self.seq_length -1)
+        # current_frame = 25
         self.i_1 = a[(current_frame * 2):(current_frame * 2) + (self.seq_length * 2)]
         self.i_2 = v[current_frame:current_frame + self.seq_length]
         return self.i_1.type(torch.LongTensor), self.i_2.type(torch.LongTensor), emotion
