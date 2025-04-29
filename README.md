@@ -2,7 +2,7 @@
 # A vector quantized masked autoencoder for audiovisual speech emotion recognition
 [![Generic badge](https://img.shields.io/badge/<STATUS>-<in_progress>-<COLOR>.svg)]()
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-[![Website shields.io](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://samsad35.github.io/site-mdvae/)
+[![Website shields.io](https://img.shields.io/website-up-down-green-red/http/shields.io.svg)](https://samsad35.github.io/VQ-MAE-AudioVisual/)
 
 [comment]: <> ([![PyPI version fury.io]&#40;https://badge.fury.io/py/ansicolortags.svg&#41;]&#40;https://test.pypi.org/project/&#41;)
 
@@ -13,9 +13,8 @@ This repository contains the code associated with the following publication:
 If you use this code for your research, please cite the above paper.
 
 Useful links:
-- [Abstract](https://arxiv.org/abs/2305.03568)
-- [Paper]()
-- [Demo website with qualitative results](https://samsad35.github.io/site-mdvae/)
+- [Paper](https://www.sciencedirect.com/science/article/pii/S1077314225000852)
+- [Demo website with qualitative results](https://samsad35.github.io/VQ-MAE-AudioVisual/)
 
 ## Setup 
 - [ ] Pypi: (Soon) 
