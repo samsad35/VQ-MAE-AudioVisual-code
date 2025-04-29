@@ -8,7 +8,7 @@
 
 
 This repository contains the code associated with the following publication:
-> **A vector quantized masked autoencoder for audiovisual emotion recognition**<br> Samir Sadok, Simon Leglaive, Renaud Séguier<br>Face and gesture 2024.
+> **A vector quantized masked autoencoder for audiovisual emotion recognition**<br> Samir Sadok, Simon Leglaive, Renaud Séguier (2025)<br>Computer Vision and Image Understanding, 104362.
 
 If you use this code for your research, please cite the above paper.
 
