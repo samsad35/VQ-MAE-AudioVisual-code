@@ -29,26 +29,26 @@ Useful links:
 
 ## Usage
 * To do:
-  * [x] Training VQ-VAE-Speech
+  * [x] Training VQ-VAE-Audio
   * [x] Training VQ-VAE-Visual
   * [X] Training VQ-MAE-AV
   * [X] Fine-tuning and classification for emotion recognition
 
-### 1) Training Speech VQ-VAE-Specch in unsupervised learning
+### 1) Training VQ-VAE-Audio in unsupervised learning
 
 ![VQ-VAE-audio](images/tokens-audio.svg)
 
 See the code [train_speech_vqvae.py](train_speech_vqvae.py)
-- You can download our pre-trained speech VQ-VAE [following link]() (released soon).
+- You can download our pre-trained audio VQ-VAE [following link]() (released soon).
 
-### 2) Training Speech VQ-VAE-Specch in unsupervised learning
+### 2) Training VQ-VAE-Visual in unsupervised learning
 
 ![VQ-VAE-visual](images/tokens-visual.svg)
 
 See the code [train_visual_vqvae.py](train_visual_vqvae.py)
-- You can download our pre-trained speech VQ-VAE [following link]() (released soon).
+- You can download our pre-trained visual VQ-VAE [following link]() (released soon).
 
-### 2) Training VQ-MAE-Speech in self-supervised learning
+### 2) Training VQ-MAE-AV in self-supervised learning
 ![VQ-MAE](images/overview-new.svg)
 
 See the code [train_vq_mae_av.py](train_vq_mae_av.py)
